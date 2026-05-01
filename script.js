@@ -120,54 +120,43 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function getAIResponse(userInput) {
-        const text = userInput.toLowerCase();
-        conversationTurn++;
-        
-        // Safety/Crisis check
-        if (text.match(/(suicide|kill myself|die|end it all|hurt myself|pills)/)) {
-            return "I am so sorry you're feeling this much pain. Please know that your life has value. I strongly encourage you to click 'Talk to a Real Person' below or call the helpline. You don't have to carry this alone.";
-        }
-        
-        if (text.match(/(anxious|anxiety|panic|overwhelmed|stress|scared)/)) {
-            return "It sounds like you're carrying a lot of weight right now. Can we try taking a slow, deep breath together? What's the main thing making you feel overwhelmed?";
-        }
-        
-        if (text.match(/(sad|depressed|down|crying|hopeless|tired of trying)/)) {
-            return "I hear the sadness in your words. It's completely okay to let yourself feel this. How long have things been feeling this heavy for you?";
-        }
-        
-        if (text.match(/(lonely|alone|nobody|isolated|no one)/)) {
-            return "Feeling isolated is incredibly difficult. Please know that right now, in this moment, you are heard. I'm here. Do you want to talk about what's making you feel alone?";
-        }
+    // Maintain conversation history for the AI
+    let conversationHistory = [
+        { role: "system", content: "You are Zenith, an empathetic, non-judgmental, and highly supportive mental health AI buddy. Keep responses short (1-2 sentences max), warm, and conversational. Ask open-ended questions. If the user mentions suicide or self-harm, gently encourage them to use the 'Talk to a Real Person' button." }
+    ];
 
-        if (text.match(/(angry|mad|frustrated|annoyed|hate)/)) {
-            return "It's totally valid to feel frustrated about that. Anger can be really exhausting to hold onto. Do you want to vent more about what happened?";
-        }
+    async function getAIResponse(userInput) {
+        conversationHistory.push({ role: "user", content: userInput });
 
-        if (text.match(/(hello|hi|hey)/) && text.length < 15) {
-            return "Hi there. I'm glad you reached out. What's on your mind today?";
-        }
+        try {
+            // Using a free, keyless AI endpoint perfect for frontend prototyping!
+            const response = await fetch("https://text.pollinations.ai/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    messages: conversationHistory,
+                    model: "openai"
+                })
+            });
 
-        // Sequential generic responses if no keywords hit
-        if (conversationTurn === 1) {
-            return "Thank you for sharing that with me. It takes courage to open up. Could you tell me a bit more about how that makes you feel?";
-        } else if (conversationTurn === 2) {
-            return "I see. It makes a lot of sense that you'd feel that way given the situation. How have you been coping with this lately?";
-        } else if (conversationTurn === 3) {
-            return "That sounds exhausting. Please remember to be gentle with yourself. You're doing the best you can. What do you feel like you need most right now?";
-        } else {
-            const generic = [
-                "I'm listening. Please go on.",
-                "That's a very valid way to feel. Tell me more.",
-                "I'm here for you. Take all the time you need.",
-                "It's okay to let it all out. I'm not judging you."
-            ];
-            return generic[Math.floor(Math.random() * generic.length)];
+            if (!response.ok) {
+                throw new Error("API request failed");
+            }
+
+            // The API returns the raw text directly
+            const aiMessage = await response.text();
+            
+            conversationHistory.push({ role: "assistant", content: aiMessage });
+            return aiMessage;
+        } catch (error) {
+            console.error(error);
+            return "I'm having a little trouble connecting to my brain right now. Can we try again in a moment?";
         }
     }
 
-    function handleSend() {
+    async function handleSend() {
         const text = chatInput.value.trim();
         if (!text) return;
         
@@ -176,11 +165,21 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.value = '';
         btnSend.disabled = true;
 
-        // Mock AI response
-        setTimeout(() => {
-            const response = getAIResponse(text);
-            addMessage(response, 'ai');
-        }, 1500 + Math.random() * 1000); // Add a slight random delay for realism
+        // Show a typing indicator
+        const tempId = "typing-" + Date.now();
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message', 'msg-ai', 'pulse');
+        msgDiv.id = tempId;
+        msgDiv.textContent = "...";
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Fetch real AI response
+        const responseText = await getAIResponse(text);
+        
+        // Remove typing indicator and add real message
+        document.getElementById(tempId).remove();
+        addMessage(responseText, 'ai');
     }
 
     // --- Event Listeners ---
@@ -249,4 +248,15 @@ document.addEventListener('DOMContentLoaded', () => {
             e.currentTarget.style.borderColor = 'var(--primary-color)';
         });
     });
+
+    // Cursor Glow Tracking
+    const cursorGlow = document.getElementById('cursor-glow');
+    if (cursorGlow) {
+        document.addEventListener('mousemove', (e) => {
+            requestAnimationFrame(() => {
+                cursorGlow.style.left = e.clientX + 'px';
+                cursorGlow.style.top = e.clientY + 'px';
+            });
+        });
+    }
 });
