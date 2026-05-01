@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith - Anonymous Mental Health Support</title>
+    <meta name="description" content="You're safe here. Completely anonymous. Completely free mental health support.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Ionicons for clean, modern icons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body>
+
+    <!-- SCREEN 1: Welcome / Session Boot -->
+    <main id="screen-welcome" class="screen active fade-in">
+        <div class="welcome-container">
+            <div class="brand-subtle">
+                <div class="logo-mark">Z</div>
+            </div>
+            
+            <div class="welcome-text">
+                <h1>You're safe here.</h1>
+                <h2>Completely anonymous.<br>Completely free.</h2>
+            </div>
+
+            <div class="action-group">
+                <p class="action-label">Talk to Someone</p>
+                <div class="primary-actions">
+                    <button id="btn-voice-mode" class="btn btn-primary btn-large">
+                        <ion-icon name="mic-outline"></ion-icon>
+                        Voice
+                    </button>
+                    <button id="btn-text-mode" class="btn btn-primary btn-large">
+                        <ion-icon name="chatbubble-outline"></ion-icon>
+                        Text
+                    </button>
+                </div>
+                
+                <button id="btn-real-person-welcome" class="btn btn-secondary mt-1">
+                    Talk to a Real Person
+                </button>
+                <a href="#" class="info-link mt-1">How it works</a>
+            </div>
+
+            <div class="privacy-notice">
+                <ion-icon name="shield-checkmark-outline"></ion-icon>
+                <p><strong>Privacy:</strong> Nothing is stored.<br>No account. No history. Period.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- SCREEN 2: Main Conversation Room -->
+    <main id="screen-chat" class="screen">
+        <header class="chat-header">
+            <div class="status-strip">
+                <div class="status-dot green pulse"></div>
+                <span class="timer" id="session-timer">00:00</span>
+            </div>
+            <button id="btn-end-session" class="btn btn-icon btn-danger-ghost" title="End Session">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </header>
+
+        <div class="chat-area" id="chat-messages">
+            <!-- First Run Empty State -->
+            <div class="first-run-state">
+                <div class="ai-avatar pulse">
+                    <ion-icon name="sparkles-outline"></ion-icon>
+                </div>
+                <h3>Welcome to Zenith</h3>
+                <p class="ai-intro">"I'm here to listen. No judgment, no records."</p>
+                
+                <div class="starter-chips">
+                    <button class="chip">"I'm feeling overwhelmed"</button>
+                    <button class="chip">"I need to talk"</button>
+                    <button class="chip">"I'm not doing well"</button>
+                </div>
+            </div>
+            
+            <!-- Messages will be injected here -->
+        </div>
+
+        <footer class="chat-composer">
+            <div class="input-wrapper">
+                <button id="btn-toggle-mic" class="btn btn-icon btn-ghost">
+                    <ion-icon name="mic-outline"></ion-icon>
+                </button>
+                <input type="text" id="chat-input" placeholder="Type or say something…" autocomplete="off">
+                <button id="btn-send" class="btn btn-icon btn-primary" disabled>
+                    <ion-icon name="send"></ion-icon>
+                </button>
+            </div>
+            
+            <button id="btn-real-person-chat" class="btn btn-support-link">
+                <ion-icon name="call-outline"></ion-icon> Talk to a Real Person
+            </button>
+        </footer>
+    </main>
+
+    <!-- MODAL: Human Support Choice Sheet -->
+    <div id="modal-support" class="modal-overlay hidden">
+        <div class="bottom-sheet slide-up">
+            <div class="sheet-header">
+                <h3>Human Support Options</h3>
+                <p>Sometimes it helps to talk live.</p>
+            </div>
+            
+            <div class="support-options">
+                <div class="support-card">
+                    <div class="card-info">
+                        <div class="card-title">
+                            <ion-icon name="people-outline"></ion-icon>
+                            Counsellor
+                        </div>
+                        <p>Volunteer listener, video call</p>
+                        <span class="badge green">Available now</span>
+                    </div>
+                    <div class="card-actions">
+                        <button id="btn-join-counsellor" class="btn btn-primary btn-sm">Join</button>
+                    </div>
+                </div>
+
+                <div class="support-card">
+                    <div class="card-info">
+                        <div class="card-title">
+                            <ion-icon name="call-outline"></ion-icon>
+                            iCall Voice Bridge
+                        </div>
+                        <p>Anonymous phone call (9152987821)</p>
+                    </div>
+                    <div class="card-actions">
+                        <a href="tel:9152987821" class="btn btn-secondary btn-sm">Call Now</a>
+                    </div>
+                </div>
+
+                <div class="support-card">
+                    <div class="card-info">
+                        <div class="card-title">
+                            <ion-icon name="chatbubbles-outline"></ion-icon>
+                            7 Cups Chat
+                        </div>
+                        <p>Peer support community</p>
+                    </div>
+                    <div class="card-actions">
+                        <a href="https://www.7cups.com" target="_blank" class="btn btn-secondary btn-sm">Open</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sheet-footer">
+                <button id="btn-close-support" class="btn btn-ghost w-full">
+                    <ion-icon name="arrow-back-outline"></ion-icon> Keep talking to AI
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Routed Human Session -->
+    <div id="modal-routed" class="modal-overlay hidden">
+        <div class="call-room scale-up">
+            <header class="routed-header">
+                <div class="status-strip">
+                    <div class="status-dot green pulse"></div>
+                    <span>Connected to volunteer • <span id="call-timer">00:00</span></span>
+                </div>
+            </header>
+            
+            <div class="video-container">
+                <div class="volunteer-video-placeholder">
+                    <ion-icon name="person-outline"></ion-icon>
+                    <p>Volunteer Camera Off</p>
+                </div>
+                <div class="user-video-pip">
+                    <ion-icon name="person-outline"></ion-icon>
+                </div>
+                
+                <div class="call-controls">
+                    <button class="btn btn-icon btn-ghost active"><ion-icon name="mic"></ion-icon></button>
+                    <button class="btn btn-icon btn-ghost"><ion-icon name="videocam-off"></ion-icon></button>
+                    <button id="btn-end-call" class="btn btn-icon btn-danger"><ion-icon name="call"></ion-icon></button>
+                </div>
+            </div>
+            
+            <div class="chat-fallback">
+                <div class="input-wrapper">
+                    <input type="text" placeholder="Type a message..." autocomplete="off">
+                    <button class="btn btn-icon btn-primary"><ion-icon name="send"></ion-icon></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Session End -->
+    <div id="modal-end" class="modal-overlay hidden">
+        <div class="center-modal zoom-in">
+            <div class="end-icon">
+                <ion-icon name="checkmark-circle-outline"></ion-icon>
+            </div>
+            <h3>Thank you for talking.</h3>
+            
+            <div class="end-privacy-notice">
+                <p>This conversation is being deleted right now.<br>Nothing stays with us.</p>
+            </div>
+
+            <div class="mood-check">
+                <p>How are you feeling now?</p>
+                <div class="mood-options">
+                    <button class="btn-mood"><ion-icon name="arrow-up-outline"></ion-icon> Better</button>
+                    <button class="btn-mood"><ion-icon name="remove-outline"></ion-icon> Same</button>
+                    <button class="btn-mood"><ion-icon name="arrow-down-outline"></ion-icon> Worse</button>
+                </div>
+            </div>
+
+            <div class="quick-resources">
+                <a href="https://www.7cups.com" target="_blank"><ion-icon name="link-outline"></ion-icon> Continue on 7 Cups</a>
+                <a href="tel:9152987821"><ion-icon name="call-outline"></ion-icon> Call iCall (9152987821)</a>
+            </div>
+
+            <div class="end-actions">
+                <button id="btn-final-close" class="btn btn-secondary w-full">Close App</button>
+                <button id="btn-new-session" class="btn btn-primary w-full mt-1">Open New Session</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
