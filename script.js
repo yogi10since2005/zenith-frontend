@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let secondsElapsed = 0;
     let callSecondsElapsed = 0;
     let conversationTurn = 0; // Tracks conversation depth
+    let isVoiceMode = false; // Tracks if AI should speak
 
     // --- Navigation & View Logic ---
     function showScreen(screen) {
@@ -180,13 +181,84 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remove typing indicator and add real message
         document.getElementById(tempId).remove();
         addMessage(responseText, 'ai');
+        
+        // Speak response if voice mode is enabled
+        speakText(responseText);
+    }
+
+    // --- Speech Synthesis & Recognition ---
+    function speakText(text) {
+        if (!isVoiceMode || !window.speechSynthesis) return;
+        
+        window.speechSynthesis.cancel(); // Stop any current speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Try to find a calming voice
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google UK English Female'));
+        if (preferredVoice) utterance.voice = preferredVoice;
+        
+        utterance.rate = 0.95; // Slightly slower
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Speech-to-Text (User Dictation)
+    const btnToggleMic = document.getElementById('btn-toggle-mic');
+    let recognition = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        
+        recognition.onstart = () => {
+            btnToggleMic.classList.add('pulse');
+            btnToggleMic.style.color = 'var(--danger-color)';
+            chatInput.placeholder = "Listening...";
+        };
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+            btnSend.disabled = false;
+            // Auto send after speaking
+            handleSend();
+        };
+        
+        recognition.onend = () => {
+            btnToggleMic.classList.remove('pulse');
+            btnToggleMic.style.color = '';
+            chatInput.placeholder = "Type or say something…";
+        };
+    }
+
+    if (btnToggleMic) {
+        btnToggleMic.addEventListener('click', () => {
+            if (recognition) {
+                isVoiceMode = true; // Auto-enable AI voice if user starts talking
+                try {
+                    recognition.start();
+                } catch(e) {
+                    recognition.stop();
+                }
+            } else {
+                alert("Speech recognition is not supported in your browser.");
+            }
+        });
     }
 
     // --- Event Listeners ---
 
     // Welcome Screen
-    btnVoiceMode.addEventListener('click', startSession);
-    btnTextMode.addEventListener('click', startSession);
+    btnVoiceMode.addEventListener('click', () => {
+        isVoiceMode = true;
+        startSession();
+    });
+    btnTextMode.addEventListener('click', () => {
+        isVoiceMode = false;
+        startSession();
+    });
     btnRealPersonWelcome.addEventListener('click', () => {
         showModal(modalSupport);
     });
