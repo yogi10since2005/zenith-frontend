@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Maintain conversation history for the AI
     let conversationHistory = [
-        { role: "system", content: "You are Zenith, an empathetic, non-judgmental, and highly supportive mental health AI buddy. Keep responses short (1-2 sentences max), warm, and conversational. Ask open-ended questions. If the user mentions suicide or self-harm, gently encourage them to use the 'Talk to a Real Person' button." }
+        { role: "system", content: "You are Zenith, an empathetic and highly supportive mental health AI buddy. Keep responses very short (1-2 sentences), warm, and conversational. IMPORTANT: If the user asks you to speak a specific language, IMMEDIATELY switch to that language and use its native script (e.g., Devanagari for Hindi, Telugu script for Telugu). Otherwise, perfectly match the language the user is using. Use natural, everyday phrasing. If the user mentions suicide or self-harm, gently encourage them to use the 'Talk to a Real Person' button." }
     ];
 
     async function getAIResponse(userInput) {
@@ -169,9 +169,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show a typing indicator
         const tempId = "typing-" + Date.now();
         const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message', 'msg-ai', 'pulse');
+        msgDiv.classList.add('message', 'msg-ai');
         msgDiv.id = tempId;
-        msgDiv.textContent = "...";
+        msgDiv.innerHTML = '<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -193,10 +193,44 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.cancel(); // Stop any current speech
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Try to find a calming voice
+        // Auto-detect regional languages based on script characters
+        if (/[\u0900-\u097F]/.test(text)) {
+            utterance.lang = 'hi-IN'; // Hindi
+        } else if (/[\u0B80-\u0BFF]/.test(text)) {
+            utterance.lang = 'ta-IN'; // Tamil
+        } else if (/[\u0C00-\u0C7F]/.test(text)) {
+            utterance.lang = 'te-IN'; // Telugu
+        } else if (/[\u0C80-\u0CFF]/.test(text)) {
+            utterance.lang = 'kn-IN'; // Kannada
+        } else if (/[\u0D00-\u0D7F]/.test(text)) {
+            utterance.lang = 'ml-IN'; // Malayalam
+        } else if (/[\u0980-\u09FF]/.test(text)) {
+            utterance.lang = 'bn-IN'; // Bengali
+        } else {
+            utterance.lang = 'en-US'; // Default English
+        }
+
+        // Try to find a voice that matches the detected language
         const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google UK English Female'));
-        if (preferredVoice) utterance.voice = preferredVoice;
+        
+        // Filter voices by the target language
+        const langVoices = voices.filter(v => v.lang.includes(utterance.lang));
+        
+        // Try to find a specifically female voice in that language (using common female voice names across Windows, Mac, and Android)
+        let targetVoice = langVoices.find(v => /female|zira|samantha|lekha|kalpana|heera|sita|kanya|veena|geeta|google/i.test(v.name));
+        
+        // If no specifically labeled female voice is found, use the first available voice for that language (usually female by default)
+        if (!targetVoice && langVoices.length > 0) {
+            targetVoice = langVoices[0];
+        }
+        
+        if (targetVoice) {
+            utterance.voice = targetVoice;
+        } else {
+            // Absolute fallback to a global female voice if the regional language isn't installed
+            const fallbackVoice = voices.find(v => /female|zira|samantha|google/i.test(v.name));
+            if (fallbackVoice) utterance.voice = fallbackVoice;
+        }
         
         utterance.rate = 0.95; // Slightly slower
         utterance.pitch = 1.0;
@@ -212,10 +246,14 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition.continuous = false;
         recognition.interimResults = false;
         
+        // Optimize for the user's system language (crucial for regional speech recognition)
+        // If it can't find one, defaults to Indian English which handles mixed accents well
+        recognition.lang = navigator.language || 'en-IN';
+        
         recognition.onstart = () => {
             btnToggleMic.classList.add('pulse');
             btnToggleMic.style.color = 'var(--danger-color)';
-            chatInput.placeholder = "Listening...";
+            chatInput.placeholder = "Listening (" + recognition.lang + ")...";
         };
         
         recognition.onresult = (event) => {
@@ -253,6 +291,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Welcome Screen
     btnVoiceMode.addEventListener('click', () => {
         isVoiceMode = true;
+        
+        // Browser security requires speech to be triggered directly by a user click first
+        if (window.speechSynthesis) {
+            const unlockUtterance = new SpeechSynthesisUtterance('');
+            unlockUtterance.volume = 0;
+            window.speechSynthesis.speak(unlockUtterance);
+        }
+        
         startSession();
     });
     btnTextMode.addEventListener('click', () => {
@@ -295,7 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // End Session Modal
     btnFinalClose.addEventListener('click', () => {
-        window.close(); // Might not work depending on browser security, but standard practice
         resetApp(); 
     });
     btnNewSession.addEventListener('click', () => {
@@ -330,5 +375,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 cursorGlow.style.top = e.clientY + 'px';
             });
         });
+    }
+
+    // Ambient Fireflies Spawner
+    const particleContainer = document.getElementById('particle-container');
+    if (particleContainer) {
+        function createFirefly() {
+            const firefly = document.createElement('div');
+            firefly.classList.add('firefly');
+            
+            // Random horizontal start position
+            firefly.style.left = Math.random() * 100 + 'vw';
+            
+            // Random size for depth effect
+            const size = Math.random() * 3 + 2; // 2px to 5px
+            firefly.style.width = size + 'px';
+            firefly.style.height = size + 'px';
+            
+            // Random duration between 12s and 25s
+            const duration = Math.random() * 13 + 12;
+            firefly.style.animationDuration = duration + 's';
+            
+            // Random horizontal drift direction and intensity
+            const drift = (Math.random() - 0.5) * 150; // -75px to +75px drift
+            firefly.style.setProperty('--drift', drift + 'px');
+            
+            particleContainer.appendChild(firefly);
+            
+            // Clean up the particle after animation finishes
+            setTimeout(() => {
+                if(particleContainer.contains(firefly)) {
+                    firefly.remove();
+                }
+            }, duration * 1000);
+        }
+
+        // Initially spawn a few so the screen isn't empty
+        for(let i = 0; i < 15; i++) {
+            setTimeout(createFirefly, Math.random() * 5000);
+        }
+        
+        // Continually spawn new ones
+        setInterval(createFirefly, 800);
     }
 });

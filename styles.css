@@ -108,6 +108,35 @@ body::after {
     transition: opacity 0.3s;
 }
 
+/* Ambient Fireflies */
+#particle-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -3; /* Sits completely in the back */
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.firefly {
+    position: absolute;
+    bottom: -20px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.4);
+    animation: floatUp linear infinite forwards;
+    opacity: 0;
+}
+
+@keyframes floatUp {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    20% { opacity: 0.8; }
+    80% { opacity: 0.8; }
+    100% { transform: translateY(-110vh) translateX(var(--drift, 30px)); opacity: 0; }
+}
+
 /* Utilities */
 .w-full { width: 100%; }
 .mt-1 { margin-top: 1rem; }
@@ -512,6 +541,30 @@ body::after {
     color: #0f172a;
     border-bottom-right-radius: 4px;
     box-shadow: 0 4px 10px rgba(56, 189, 248, 0.2);
+}
+
+/* Typing Indicator Animation */
+.typing-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 20px;
+    padding: 0 8px;
+}
+.typing-dots .dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--text-primary);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+.typing-dots .dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots .dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
 }
 
 .chat-composer {
